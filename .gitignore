@@ -35,3 +35,8 @@ build/
 
 # Pytest cache
 .pytest_cache/
+
+# Exclude large data files
+sql/wordnet_data_only.sql
+sql/wordnet_data_scrubbed.sql
+data/wordnet_raw.sql
