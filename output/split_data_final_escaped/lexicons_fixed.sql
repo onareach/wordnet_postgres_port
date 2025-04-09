@@ -1,1 +1,0 @@
-INSERT INTO lexicons (rowid, id, label, language, email, license, version, url, citation, logo, metadata, modified) OVERRIDING SYSTEM VALUE VALUES(3, 'oewn', 'Open Engish Wordnet', 'en', 'english-wordnet@googlegroups.com', 'https://creativecommons.org/licenses/by/4.0', '2024', 'https://github.com/globalwordnet/english-wordnet', NULL, NULL, NULL, FALSE);

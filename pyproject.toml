@@ -1,0 +1,12 @@
+[project]
+name = "wordnet-porter"
+version = "0.1.0"
+
+[tool.setuptools]
+packages = ["wordnet_porter"]
+
+[project.dependencies]
+# For now, no external libraries needed — all standard library
+
+[project.scripts]
+wordnet-porter = "wordnet_porter.main:main"

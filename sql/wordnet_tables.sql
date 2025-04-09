@@ -1,39 +1,3 @@
--- Basic lookup tables first
-CREATE TABLE ili_statuses (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    status TEXT NOT NULL,
-    UNIQUE (status)
-);
-
-CREATE TABLE relation_types (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    type TEXT NOT NULL,
-    UNIQUE (type)
-);
-
-CREATE TABLE lexfiles (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name TEXT NOT NULL,
-    UNIQUE (name)
-);
-
-CREATE TABLE lexicons (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id TEXT NOT NULL,
-    label TEXT NOT NULL,
-    language TEXT NOT NULL,
-    email TEXT NOT NULL,
-    license TEXT NOT NULL,
-    version TEXT NOT NULL,
-    url TEXT,
-    citation TEXT,
-    logo TEXT,
-    metadata JSONB,
-    modified BOOLEAN DEFAULT FALSE NOT NULL,
-    UNIQUE (id, version)
-);
-
--- These depend on previous tables
 CREATE TABLE ilis (
     rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id TEXT NOT NULL,
@@ -41,17 +5,6 @@ CREATE TABLE ilis (
     definition TEXT,
     metadata JSONB,
     UNIQUE (id)
-);
-
-CREATE TABLE synsets (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id TEXT NOT NULL,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    ili_rowid INTEGER REFERENCES ilis (rowid),
-    pos TEXT,
-    lexicalized BOOLEAN DEFAULT TRUE NOT NULL,
-    lexfile_rowid INTEGER REFERENCES lexfiles (rowid),
-    metadata JSONB
 );
 
 CREATE TABLE proposed_ilis (
@@ -62,134 +15,20 @@ CREATE TABLE proposed_ilis (
     UNIQUE (synset_rowid)
 );
 
-CREATE TABLE entries (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id TEXT NOT NULL,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    pos TEXT NOT NULL,
+CREATE TABLE lexicons (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,  -- unique database-internal id
+    id TEXT NOT NULL,           -- user-facing id
+    label TEXT NOT NULL,
+    language TEXT NOT NULL,     -- bcp-47 language tag
+    email TEXT NOT NULL,
+    license TEXT NOT NULL,
+    version TEXT NOT NULL,
+    url TEXT,
+    citation TEXT,
+    logo TEXT,
     metadata JSONB,
-    UNIQUE (id, lexicon_rowid)
-);
-
-CREATE TABLE forms (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id TEXT,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    entry_rowid INTEGER NOT NULL REFERENCES entries (rowid) ON DELETE CASCADE,
-    form TEXT NOT NULL,
-    normalized_form TEXT,
-    script TEXT,
-    rank INTEGER DEFAULT 1,
-    UNIQUE (entry_rowid, form, script)
-);
-
-CREATE TABLE pronunciations (
-    form_rowid INTEGER NOT NULL REFERENCES forms (rowid) ON DELETE CASCADE,
-    value TEXT,
-    variety TEXT,
-    notation TEXT,
-    phonemic BOOLEAN DEFAULT TRUE NOT NULL,
-    audio TEXT
-);
-
-CREATE TABLE tags (
-    form_rowid INTEGER NOT NULL REFERENCES forms (rowid) ON DELETE CASCADE,
-    tag TEXT,
-    category TEXT
-);
-
-CREATE TABLE synset_relations (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    source_rowid INTEGER NOT NULL REFERENCES synsets (rowid) ON DELETE CASCADE,
-    target_rowid INTEGER NOT NULL REFERENCES synsets (rowid) ON DELETE CASCADE,
-    type_rowid INTEGER NOT NULL REFERENCES relation_types (rowid),
-    metadata JSONB
-);
-
-CREATE TABLE senses (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id TEXT NOT NULL,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    entry_rowid INTEGER NOT NULL REFERENCES entries (rowid) ON DELETE CASCADE,
-    entry_rank INTEGER DEFAULT 1,
-    synset_rowid INTEGER NOT NULL REFERENCES synsets (rowid) ON DELETE CASCADE,
-    synset_rank INTEGER DEFAULT 1,
-    lexicalized BOOLEAN DEFAULT TRUE NOT NULL,
-    metadata JSONB
-);
-
-CREATE TABLE definitions (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    synset_rowid INTEGER NOT NULL REFERENCES synsets (rowid) ON DELETE CASCADE,
-    definition TEXT,
-    language TEXT,
-    sense_rowid INTEGER REFERENCES senses (rowid) ON DELETE SET NULL,
-    metadata JSONB
-);
-
-CREATE TABLE synset_examples (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    synset_rowid INTEGER NOT NULL REFERENCES synsets (rowid) ON DELETE CASCADE,
-    example TEXT,
-    language TEXT,
-    metadata JSONB
-);
-
-CREATE TABLE sense_relations (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    source_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE,
-    target_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE,
-    type_rowid INTEGER NOT NULL REFERENCES relation_types (rowid),
-    metadata JSONB
-);
-
-CREATE TABLE sense_synset_relations (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    source_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE,
-    target_rowid INTEGER NOT NULL REFERENCES synsets (rowid) ON DELETE CASCADE,
-    type_rowid INTEGER NOT NULL REFERENCES relation_types (rowid),
-    metadata JSONB
-);
-
-CREATE TABLE adjpositions (
-    sense_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE,
-    adjposition TEXT NOT NULL
-);
-
-CREATE TABLE sense_examples (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    sense_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE,
-    example TEXT,
-    language TEXT,
-    metadata JSONB
-);
-
-CREATE TABLE counts (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    sense_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE,
-    count INTEGER NOT NULL,
-    metadata JSONB
-);
-
-CREATE TABLE syntactic_behaviours (
-    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id TEXT,
-    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
-    frame TEXT NOT NULL,
-    UNIQUE (lexicon_rowid, id),
-    UNIQUE (lexicon_rowid, frame)
-);
-
-CREATE TABLE syntactic_behaviour_senses (
-    syntactic_behaviour_rowid INTEGER NOT NULL REFERENCES syntactic_behaviours (rowid) ON DELETE CASCADE,
-    sense_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE
+    modified BOOLEAN DEFAULT FALSE NOT NULL,
+    UNIQUE (id, version)
 );
 
 CREATE TABLE lexicon_dependencies (
@@ -208,3 +47,163 @@ CREATE TABLE lexicon_extensions (
     base_rowid INTEGER REFERENCES lexicons (rowid),
     UNIQUE (extension_rowid, base_rowid)
 );
+
+CREATE TABLE entries (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id TEXT NOT NULL,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
+    pos TEXT NOT NULL,
+    metadata JSONB,
+    UNIQUE (id, lexicon_rowid)
+);
+
+CREATE TABLE forms (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id TEXT,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons(rowid) ON DELETE CASCADE,
+    entry_rowid INTEGER NOT NULL REFERENCES entries(rowid) ON DELETE CASCADE,
+    form TEXT NOT NULL,
+    normalized_form TEXT,
+    script TEXT,
+    rank INTEGER DEFAULT 1,  -- rank 0 is the preferred lemma
+    UNIQUE (entry_rowid, form, script)
+);
+
+CREATE TABLE pronunciations (
+    form_rowid INTEGER NOT NULL REFERENCES forms (rowid) ON DELETE CASCADE,
+    value TEXT,
+    variety TEXT,
+    notation TEXT,
+    phonemic BOOLEAN DEFAULT TRUE NOT NULL,
+    audio TEXT
+);
+
+CREATE TABLE tags (
+    form_rowid INTEGER NOT NULL REFERENCES forms (rowid) ON DELETE CASCADE,
+    tag TEXT,
+    category TEXT
+);
+
+CREATE TABLE synsets (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id TEXT NOT NULL,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
+    ili_rowid INTEGER REFERENCES ilis (rowid),
+    pos TEXT,
+    lexicalized BOOLEAN DEFAULT TRUE NOT NULL,
+    lexfile_rowid INTEGER REFERENCES lexfiles (rowid),
+    metadata JSONB
+);
+
+CREATE TABLE synset_relations (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
+    source_rowid INTEGER NOT NULL REFERENCES synsets(rowid) ON DELETE CASCADE,
+    target_rowid INTEGER NOT NULL REFERENCES synsets(rowid) ON DELETE CASCADE,
+    type_rowid INTEGER NOT NULL REFERENCES relation_types(rowid),
+    metadata JSONB
+);
+
+CREATE TABLE definitions (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons(rowid) ON DELETE CASCADE,
+    synset_rowid INTEGER NOT NULL REFERENCES synsets(rowid) ON DELETE CASCADE,
+    definition TEXT,
+    language TEXT,  -- bcp-47 language tag
+    sense_rowid INTEGER REFERENCES senses(rowid) ON DELETE SET NULL,
+    metadata JSONB
+);
+
+CREATE TABLE synset_examples (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons(rowid) ON DELETE CASCADE,
+    synset_rowid INTEGER NOT NULL REFERENCES synsets(rowid) ON DELETE CASCADE,
+    example TEXT,
+    language TEXT,  -- bcp-47 language tag
+    metadata JSONB
+);
+
+CREATE TABLE senses (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id TEXT NOT NULL,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons(rowid) ON DELETE CASCADE,
+    entry_rowid INTEGER NOT NULL REFERENCES entries(rowid) ON DELETE CASCADE,
+    entry_rank INTEGER DEFAULT 1,
+    synset_rowid INTEGER NOT NULL REFERENCES synsets(rowid) ON DELETE CASCADE,
+    synset_rank INTEGER DEFAULT 1,
+    lexicalized BOOLEAN DEFAULT TRUE NOT NULL,
+    metadata JSONB
+);
+
+CREATE TABLE sense_relations (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
+    source_rowid INTEGER NOT NULL REFERENCES senses(rowid) ON DELETE CASCADE,
+    target_rowid INTEGER NOT NULL REFERENCES senses(rowid) ON DELETE CASCADE,
+    type_rowid INTEGER NOT NULL REFERENCES relation_types(rowid),
+    metadata JSONB
+);
+
+CREATE TABLE sense_synset_relations (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
+    source_rowid INTEGER NOT NULL REFERENCES senses(rowid) ON DELETE CASCADE,
+    target_rowid INTEGER NOT NULL REFERENCES synsets(rowid) ON DELETE CASCADE,
+    type_rowid INTEGER NOT NULL REFERENCES relation_types(rowid),
+    metadata JSONB
+);
+
+CREATE TABLE adjpositions (
+    sense_rowid INTEGER NOT NULL REFERENCES senses(rowid) ON DELETE CASCADE,
+    adjposition TEXT NOT NULL
+);
+
+CREATE TABLE sense_examples (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons(rowid) ON DELETE CASCADE,
+    sense_rowid INTEGER NOT NULL REFERENCES senses(rowid) ON DELETE CASCADE,
+    example TEXT,
+    language TEXT,  -- bcp-47 language tag
+    metadata JSONB
+);
+
+CREATE TABLE counts (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons(rowid) ON DELETE CASCADE,
+    sense_rowid INTEGER NOT NULL REFERENCES senses(rowid) ON DELETE CASCADE,
+    count INTEGER NOT NULL,
+    metadata JSONB
+);
+
+CREATE TABLE syntactic_behaviours (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id TEXT,
+    lexicon_rowid INTEGER NOT NULL REFERENCES lexicons (rowid) ON DELETE CASCADE,
+    frame TEXT NOT NULL,
+    UNIQUE (lexicon_rowid, id),
+    UNIQUE (lexicon_rowid, frame)
+);
+
+CREATE TABLE syntactic_behaviour_senses (
+    syntactic_behaviour_rowid INTEGER NOT NULL REFERENCES syntactic_behaviours (rowid) ON DELETE CASCADE,
+    sense_rowid INTEGER NOT NULL REFERENCES senses (rowid) ON DELETE CASCADE
+);
+
+CREATE TABLE relation_types (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    type TEXT NOT NULL,
+    UNIQUE (type)
+);
+
+CREATE TABLE ili_statuses (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    status TEXT NOT NULL,
+    UNIQUE (status)
+);
+
+CREATE TABLE lexfiles (
+    rowid INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name TEXT NOT NULL,
+    UNIQUE (name)
+);
+

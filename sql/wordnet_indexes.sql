@@ -14,8 +14,8 @@ CREATE INDEX synset_relation_source_index ON synset_relations (source_rowid);
 CREATE INDEX synset_relation_target_index ON synset_relations (target_rowid);
 CREATE INDEX definition_rowid_index ON definitions (synset_rowid);
 CREATE INDEX definition_sense_index ON definitions (sense_rowid);
-CREATE INDEX synset_example_rowid_index ON synset_examples (synset_rowid);
-CREATE INDEX sense_id_index ON senses (id);
+CREATE INDEX synset_example_rowid_index ON synset_examples(synset_rowid);
+CREATE INDEX sense_id_index ON senses(id);
 CREATE INDEX sense_entry_rowid_index ON senses (entry_rowid);
 CREATE INDEX sense_synset_rowid_index ON senses (synset_rowid);
 CREATE INDEX sense_relation_source_index ON sense_relations (source_rowid);
@@ -24,10 +24,10 @@ CREATE INDEX sense_synset_relation_source_index ON sense_synset_relations (sourc
 CREATE INDEX sense_synset_relation_target_index ON sense_synset_relations (target_rowid);
 CREATE INDEX adjposition_sense_index ON adjpositions (sense_rowid);
 CREATE INDEX sense_example_index ON sense_examples (sense_rowid);
-CREATE INDEX count_index ON counts (sense_rowid);
+CREATE INDEX count_index ON counts(sense_rowid);
 CREATE INDEX syntactic_behaviour_id_index ON syntactic_behaviours (id);
-CREATE INDEX syntactic_behaviour_sense_sb_index ON syntactic_behaviour_senses (syntactic_behaviour_rowid);
-CREATE INDEX syntactic_behaviour_sense_sense_index ON syntactic_behaviour_senses (sense_rowid);
+CREATE INDEX syntactic_behaviour_sense_sb_index
+CREATE INDEX syntactic_behaviour_sense_sense_index
 CREATE INDEX relation_type_index ON relation_types (type);
 CREATE INDEX ili_status_index ON ili_statuses (status);
 CREATE INDEX lexfile_index ON lexfiles (name);
